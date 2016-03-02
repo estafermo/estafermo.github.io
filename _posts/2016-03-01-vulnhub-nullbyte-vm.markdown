@@ -58,4 +58,4 @@ export PATH=.:$PATH
 {% endhighlight %}
 <p>
 and then run the process and voilá, root. This was pure luck because i could only do that if the parameter passed which i assumed was 'ps' didn't have the full path.
-<br><p> Saw other people resolution and i must learn how to gdb. Others created a newly ps and changed the path to prioritize. Anyway, my deadlock in this was one the damn image, Neverless it was pure fun. :)
+<br><p> Saw other people resolution and i must learn how to gdb properly. Others created a newly ps and changed the path to prioritize. Anyway, my deadlock in this was one the damn image, Neverless it was pure fun. :)
