@@ -62,7 +62,7 @@ chmod +x ofs_64
 ./ofs_64
 {% endhighlight %}
 <p><b>ROOT!</b> Oh!
-<p>Reading the email in /var/spool/mail/www-data and the help hints i knew i had to use rockyou passwordlist against somehting and found the encrypted file in:
+<p>Reading the email in /var/spool/mail/www-data and the help hints i knew i had to use rockyou passwordlist against something and found the encrypted file in:
 {% highlight bash %}
 /root/dave.tc
 {% endhighlight %}
