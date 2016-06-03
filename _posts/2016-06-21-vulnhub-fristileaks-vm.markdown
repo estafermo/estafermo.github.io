@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "vulnhub fristileaks vm"
-date:   2016-05-26 00:00:10 +0000
+date:   2016-06-01 00:00:10 +0000
 categories: vulnhub
 ---
 <p>Fun VM and did it on time! <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">Fristileaks</a>
