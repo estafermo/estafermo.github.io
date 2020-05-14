@@ -1,0 +1,20 @@
+I"<p>Been a while since i played with vulnhub. So since yesterday i've been trying to break <a href="https://www.vulnhub.com/entry/droopy-v02,143/">droopy</a>, which i almost did ...
+<p>So, the usual stuff:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>netdiscover <span class="nt">-r</span> 192.168.0.0/16</code></pre></figure>
+
+<p> My target is 192.168.1.89 .
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nmap <span class="nt">-p-</span> <span class="nt">-sV</span> 192.168.1.89</code></pre></figure>
+
+<p> Found a port 80 open. I followed it since it was the only one open and found a drupal website.
+<br />I tried to create a user no luck, i searched for something interesting in the sub-directories:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python wfuzz.py <span class="nt">-c</span> <span class="nt">-z</span> file,wordlist/general/common.txt <span class="nt">--hc</span> 404   http://192.168.1.89/FUZZ</code></pre></figure>
+
+<pre>
+==================================================================
+ID	Response   Lines      Word         Chars          Request
+==================================================================
+</pre></p></p></p></p>
+:ET

