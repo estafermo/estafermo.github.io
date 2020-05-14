@@ -16,12 +16,12 @@ sudo netdiscover -r 192.168.0.0/16
 nmap -p- -sV 192.168.1.84
 {% endhighlight %}
 <p>Running apache on port 80, running ssh on port 777. There are other two services that i ignored.
-<p>So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in <a href="https://github.com/impious/trash">github</a> as hfuzz.rb.
+<p>So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in <a href="https://github.com/estafermo/trash">github</a> as hfuzz.rb.
 {% highlight bash %}
 python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404 -o html  http://192.168.1.84/FUZZ
 {% endhighlight %}
 <p> A few directories but the most import was <b>phpmyadmin</b>. There must be something more than a simple html with an image. Neverless i couldn't find anything useful, so i took a glimpse at the <a href="http://anthonyferrillo.net/blog/nullbyte-solution/">walkthrough</a> and saw that people checked the image.
-<p>By now i already knew that there was an url on the image, shamefully i know, but 'live and learn'. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn't hard. Again, i build an brute forcer to found the password. You can check the code <a href="https://github.com/impious/trash">github</a> as brute.rb. After a few minutes i found the password 'elite'. Btw, for real brute forcing use hydra.
+<p>By now i already knew that there was an url on the image, shamefully i know, but 'live and learn'. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn't hard. Again, i build an brute forcer to found the password. You can check the code <a href="https://github.com/estafermo/trash">github</a> as brute.rb. After a few minutes i found the password 'elite'. Btw, for real brute forcing use hydra.
 <p>Anyway, a new form was found with a texbox on it. After playing around in the browser i found http://192.168.1.84/kzMb5nVYJw/420search.php which had a few data on it . That search smelled as sqli so i fired up sqlmap.py. Yes dump-all. No big databases on this playing vm's.
 {% highlight bash %}
 sqlmap -u http://192.168.1.84/kzMb5nVYJw/420search.php?usrtosearch=ramses --dump-all

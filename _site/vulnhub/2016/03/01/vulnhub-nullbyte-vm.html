@@ -11,7 +11,7 @@
 
   <link rel="stylesheet" href="/css/main.css">
   <link rel="canonical" href="http://yourdomain.com/vulnhub/2016/03/01/vulnhub-nullbyte-vm.html">
-  <link rel="alternate" type="application/rss+xml" title="Imipious notes" href="http://yourdomain.com/feed.xml">
+  <link rel="alternate" type="application/rss+xml" title="estafermo notes" href="http://yourdomain.com/feed.xml">
 </head>
 
 
@@ -21,7 +21,7 @@
 
   <div class="wrapper">
 
-    <a class="site-title" href="/">Imipious notes</a>
+    <a class="site-title" href="/">estafermo notes</a>
 
     <nav class="site-nav">
       <a href="#" class="menu-icon">
@@ -74,12 +74,12 @@
 <figure class="highlight"><pre><code class="language-bash" data-lang="bash">nmap -p- -sV 192.168.1.84</code></pre></figure>
 
 <p>Running apache on port 80, running ssh on port 777. There are other two services that i ignored.
-<p>So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in <a href="https://github.com/impious/trash">github</a> as hfuzz.rb.
+<p>So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in <a href="https://github.com/estafermo/trash">github</a> as hfuzz.rb.
 
 <figure class="highlight"><pre><code class="language-bash" data-lang="bash">python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404 -o html  http://192.168.1.84/FUZZ</code></pre></figure>
 
 <p> A few directories but the most import was <b>phpmyadmin</b>. There must be something more than a simple html with an image. Neverless i couldn't find anything useful, so i took a glimpse at the <a href="http://anthonyferrillo.net/blog/nullbyte-solution/">walkthrough</a> and saw that people checked the image.
-<p>By now i already knew that there was an url on the image, shamefully i know, but 'live and learn'. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn't hard. Again, i build an brute forcer to found the password. You can check the code <a href="https://github.com/impious/trash">github</a> as brute.rb. After a few minutes i found the password 'elite'. Btw, for real brute forcing use hydra.
+<p>By now i already knew that there was an url on the image, shamefully i know, but 'live and learn'. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn't hard. Again, i build an brute forcer to found the password. You can check the code <a href="https://github.com/estafermo/trash">github</a> as brute.rb. After a few minutes i found the password 'elite'. Btw, for real brute forcing use hydra.
 <p>Anyway, a new form was found with a texbox on it. After playing around in the browser i found http://192.168.1.84/kzMb5nVYJw/420search.php which had a few data on it . That search smelled as sqli so i fired up sqlmap.py. Yes dump-all. No big databases on this playing vm's.
 
 <figure class="highlight"><pre><code class="language-bash" data-lang="bash">sqlmap -u http://192.168.1.84/kzMb5nVYJw/420search.php?usrtosearch<span class="o">=</span>ramses --dump-all</code></pre></figure>
@@ -130,12 +130,12 @@ and then run the process and voilá, root. This was pure luck because i could on
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Imipious notes</h2>
+    <h2 class="footer-heading">estafermo notes</h2>
 
     <div class="footer-col-wrapper">
       <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li><a href="mailto:d.impious@gmail.com">d.impious@gmail.com</a></li>
+          <li><a href="">estafermo@protonmail.com</a></li>
         </ul>
       </div>
 
@@ -143,8 +143,8 @@ and then run the process and voilá, root. This was pure luck because i could on
         <ul class="social-media-list">
           
           <li>
-            <a href="https://github.com/impious"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
-</span><span class="username">impious</span></a>
+            <a href="https://github.com/estafermo"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">estafermo</span></a>
 
           </li>
           

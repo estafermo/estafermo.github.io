@@ -6,14 +6,14 @@
 # 'jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title: Imipious notes
-email: d.impious@gmail.com
+title: estafermo notes
+email: d.estafermo@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
 
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://yourdomain.com" # the base hostname & protocol for your site
 
-github_username:  impious
+github_username:  estafermo
 
 # Build settings
 markdown: kramdown

